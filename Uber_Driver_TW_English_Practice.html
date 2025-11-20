@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>運將美語 Pro</title>
+    <style>
+        :root {
+            --primary: #000000;
+            --accent: #276EF1; /* Uber Blue */
+            --bg: #f3f3f3;
+            --card-bg: #ffffff;
+            --text: #333333;
+            --highlight: #e8f0fe;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg);
+            color: var(--text);
+            padding-bottom: 80px; /* Prevent nav overlap */
+        }
+
+        /* Header */
+        header {
+            background-color: var(--primary);
+            color: white;
+            padding: 15px 20px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        /* Navigation */
+        nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: white;
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 0;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            z-index: 100;
+        }
+
+        nav button {
+            background: none;
+            border: none;
+            font-size: 0.8rem;
+            color: #888;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        nav button.active {
+            color: var(--accent);
+            font-weight: bold;
+        }
+
+        nav button svg {
+            width: 24px;
+            height: 24px;
+            fill: currentColor;
+        }
+
+        /* Content Sections */
+        .section {
+            display: none;
+            padding: 15px;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .card-title {
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Scenarios Styles */
+        .dialogue-box {
+            margin-top: 10px;
+        }
+
+        .speaker {
+            font-size: 0.8rem;
+            color: #666;
+            margin-bottom: 2px;
+        }
+
+        .sentence {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 8px;
+            cursor: pointer;
+        }
+
+        .chinese-trans {
+            font-size: 0.9rem;
+            color: #777;
+            margin-bottom: 15px;
+            border-left: 3px solid #ddd;
+            padding-left: 8px;
+        }
+
+        /* Clickable Words */
+        .clickable-word {
+            border-bottom: 1px dashed #999;
+            transition: background 0.2s;
+        }
+        .clickable-word:active {
+            background-color: var(--accent);
+            color: white;
+        }
+
+        /* Quick Reply Styles */
+        .copy-btn {
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            float: right;
+            margin-top: -5px;
+        }
+        .copy-btn:active {
+            background-color: #1a4cb8;
+        }
+
+        .msg-text {
+            font-size: 1rem;
+            color: #333;
+            margin-right: 70px; /* Space for button */
+        }
+
+        /* Quiz Styles */
+        .quiz-option {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0;
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            text-align: left;
+            font-size: 1rem;
+        }
+        .quiz-option.correct {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+        .quiz-option.wrong {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+
+        /* Modal (Word Definition) */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 200;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal {
+            background: white;
+            width: 85%;
+            max-width: 400px;
+            border-radius: 15px;
+            padding: 20px;
+            position: relative;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 1.5rem;
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+
+        .word-title {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: var(--accent);
+            margin-bottom: 5px;
+        }
+
+        .word-pos {
+            font-style: italic;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .word-def {
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+        }
+
+        .word-example {
+            background: #f9f9f9;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            color: #444;
+        }
+        
+        .play-audio-btn {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            background: #eee;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 20px;
+            margin-bottom: 10px;
+            cursor: pointer;
+        }
+
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+            z-index: 300;
+        }
+
+        .category-tag {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .tag-red { background: #ffebee; color: #c62828; }
+        .tag-blue { background: #e3f2fd; color: #1565c0; }
+        .tag-green { background: #e8f5e9; color: #2e7d32; }
+        .tag-orange { background: #fff3e0; color: #ef6c00; }
+
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>Uber運匠英語指南 v1.0 🚕 更新於2025-11-20</h1>
+    <div style="font-size:0.8rem;">TW</div>
+</header>
+
+<!-- 訊息快貼 Section -->
+<div id="section-reply" class="section">
+    <div class="card">
+        <div class="card-title">ℹ️ 系統與接單 (System)</div>
+        <!-- Canned Messages populated by JS -->
+        <div id="list-system"></div>
+    </div>
+    <div class="card">
+        <div class="card-title">🛡️ 規矩與安全 (Rules)</div>
+        <div id="list-rules"></div>
+    </div>
+    <div class="card">
+        <div class="card-title">⛈️ 天氣與路況 (Status)</div>
+        <div id="list-status"></div>
+    </div>
+</div>
+
+<!-- 情境學習 Section -->
+<div id="section-learn" class="section active">
+    <!-- Search bar simulation -->
+    <input type="text" placeholder="🔍 搜尋情境 (例: 嘔吐, 夜市, 塞車)" style="width:100%; padding:10px; margin-bottom:15px; border:1px solid #ddd; border-radius:8px; box-sizing: border-box;">
+
+    <div id="scenarios-container"></div>
+</div>
+
+<!-- 測驗 Section -->
+<div id="section-quiz" class="section">
+    <div class="card">
+        <div class="card-title">🎯 今日挑戰 (Daily Challenge)</div>
+        <p>測試您的反應能力，選擇最得體的回答。</p>
+        <div id="quiz-container"></div>
+        <button onclick="loadQuiz()" style="width:100%; background:var(--accent); color:white; border:none; padding:12px; border-radius:8px; margin-top:10px; cursor:pointer;">換下一題</button>
+    </div>
+</div>
+
+<!-- Navigation -->
+<nav>
+    <button onclick="switchTab('section-reply', this)">
+        <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/></svg>
+        訊息快貼
+    </button>
+    <button onclick="switchTab('section-learn', this)" class="active">
+        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+        情境學習
+    </button>
+    <button onclick="switchTab('section-quiz', this)">
+        <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+        隨堂測驗
+    </button>
+</nav>
+
+<!-- Word Definition Modal -->
+<div class="modal-overlay" id="wordModal">
+    <div class="modal">
+        <button class="modal-close" onclick="closeModal()">×</button>
+        <h2 class="word-title" id="m-word">Word</h2>
+        <button class="play-audio-btn" onclick="playWordAudio()">
+            🔊 播放發音
+        </button>
+        <div class="word-pos" id="m-pos">verb.</div>
+        <div class="word-def" id="m-def">Definition here.</div>
+        <div class="word-example" id="m-ex">Example sentence.</div>
+    </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast">已複製到剪貼簿</div>
+
+<script>
+    // ================= DATA STORE =================
+    
+    // 1. Canned Messages (User provided + Expanded)
+    const cannedMessages = [
+        {
+            type: 'system',
+            text: "Please wait a moment. My previous passenger is getting off.",
+            note: "前有乘客下車"
+        },
+        {
+            type: 'system',
+            text: "The GPS system has a bug. Is your house number correct?",
+            note: "系統定位 Bug / 確認門牌"
+        },
+        {
+            type: 'system',
+            text: "System shows I arrived, but I'm still nearby. Please wait.",
+            note: "系統誤判抵達 / 請稍等"
+        },
+        {
+            type: 'rules',
+            text: "For safety, I have a dashcam recording the whole trip.",
+            note: "全程錄音錄影"
+        },
+        {
+            type: 'rules',
+            text: "Please buckle up. It is the law in Taiwan.",
+            note: "請繫安全帶 (法律規定)"
+        },
+        {
+            type: 'rules',
+            text: "Sorry, no eating or drinking in the car. Thank you!",
+            note: "請勿飲食"
+        },
+        {
+            type: 'rules',
+            text: "Could you please put your pet in a cage/carrier?",
+            note: "寵物請裝籠"
+        },
+        {
+            type: 'status',
+            text: "I cannot stop there (Red Line). Please walk forward.",
+            note: "紅線無法停 / 請往前"
+        },
+        {
+            type: 'status',
+            text: "Heavy rain often causes cancellations. Do you still need the ride?",
+            note: "下雨天再次確認叫車"
+        },
+        {
+            type: 'status',
+            text: "Due to traffic jams, the final fare might be higher.",
+            note: "塞車可能導致車資變高"
+        }
+    ];
+
+    // 2. Learning Scenarios (Rich Content)
+    const scenarios = [
+        {
+            title: "Boarding & Destination",
+            tag: "Survival",
+            color: "tag-blue",
+            dialogue: [
+                { speaker: "Driver", text: "Hello! Checking the destination. To Taipei 101?" },
+                { speaker: "Passenger", text: "Yes, that's correct." },
+                { speaker: "Driver", text: "Is the air conditioner okay? Too cold or too hot?" },
+                { speaker: "Passenger", text: "It's perfect, thanks." }
+            ]
+        },
+        {
+            title: "Rules: Kids & Shoes",
+            tag: "Rules",
+            color: "tag-red",
+            dialogue: [
+                { speaker: "Driver", text: "Hi there. Could you please take off the kid's shoes?" },
+                { speaker: "Driver", text: "I want to keep the seats clean for everyone." },
+                { speaker: "Passenger", text: "Oh, sorry about that. I will do it now." },
+                { speaker: "Driver", text: "Thank you for your cooperation." }
+            ]
+        },
+        {
+            title: "Emergency: Drunk Passenger",
+            tag: "Emergency",
+            color: "tag-red",
+            dialogue: [
+                { speaker: "Driver", text: "Sir, are you feeling okay?" },
+                { speaker: "Driver", text: "If you need to vomit, I have plastic bags here." },
+                { speaker: "Driver", text: "Please tell me immediately if you feel sick." }
+            ]
+        },
+        {
+            title: "Traffic & Delays",
+            tag: "Traffic",
+            color: "tag-orange",
+            dialogue: [
+                { speaker: "Passenger", text: "Why are we stopped?" },
+                { speaker: "Driver", text: "There is a traffic jam ahead. It's rush hour." },
+                { speaker: "Driver", text: "We might need 10 more minutes." },
+                { speaker: "Driver", text: "I will try to find a faster route." }
+            ]
+        },
+        {
+            title: "Culture: Night Markets",
+            tag: "Chat",
+            color: "tag-green",
+            dialogue: [
+                { speaker: "Passenger", text: "Any recommendations for food?" },
+                { speaker: "Driver", text: "You must go to Raohe Night Market." },
+                { speaker: "Driver", text: "Try the Stinky Tofu. It smells strong but tastes good!" },
+                { speaker: "Driver", text: "Bubble tea is also a must-try." }
+            ]
+        },
+        {
+            title: "Weather: Typhoon",
+            tag: "Weather",
+            color: "tag-orange",
+            dialogue: [
+                { speaker: "Driver", text: "A typhoon is coming tomorrow." },
+                { speaker: "Passenger", text: "Really? Should I be worried?" },
+                { speaker: "Driver", text: "Just stay indoors. The wind will be very strong." },
+                { speaker: "Driver", text: "Convenience stores will still be open though." }
+            ]
+        }
+    ];
+
+    // 3. Dictionary Data (For popups)
+    const dictionary = {
+        "destination": { pos: "n.", def: "目的地", ex: "What is your destination?" },
+        "air conditioner": { pos: "n.", def: "冷氣 (AC)", ex: "Turn on the air conditioner." },
+        "cooperation": { pos: "n.", def: "配合", ex: "Thanks for your cooperation." },
+        "vomit": { pos: "v.", def: "嘔吐", ex: "He looks like he might vomit." },
+        "plastic bags": { pos: "n.", def: "塑膠袋", ex: "Do you need a plastic bag?" },
+        "rush hour": { pos: "n.", def: "尖峰時刻", ex: "Traffic is bad during rush hour." },
+        "route": { pos: "n.", def: "路線", ex: "This is the fastest route." },
+        "recommendations": { pos: "n.", def: "推薦", ex: "Do you have any recommendations?" },
+        "stinky tofu": { pos: "n.", def: "臭豆腐", ex: "Stinky tofu is a famous snack." },
+        "typhoon": { pos: "n.", def: "颱風", ex: "Typhoons are common in summer." },
+        "indoors": { pos: "adv.", def: "在室內", ex: "Stay indoors when it rains." },
+        "dashcam": { pos: "n.", def: "行車記錄器", ex: "I have a dashcam." },
+        "buckle up": { pos: "v.", def: "繫上安全帶", ex: "Please buckle up." },
+        "cage": { pos: "n.", def: "籠子", ex: "Put the dog in the cage." },
+        "shoes": { pos: "n.", def: "鞋子", ex: "Take off your shoes." },
+        "immediately": { pos: "adv.", def: "立刻", ex: "Call me immediately." }
+    };
+
+    // 4. Quiz Data
+    const quizzes = [
+        {
+            q: "乘客想在車上吃漢堡，你該怎麼說？",
+            options: [
+                "No! Get out!",
+                "Sorry, no eating in the car.",
+                "Yummy! Give me some.",
+                "Please eat slowly."
+            ],
+            ans: 1
+        },
+        {
+            q: "前面塞車，你要告訴乘客會晚一點到：",
+            options: [
+                "Traffic is bad. We might be late.",
+                "I drive very fast, don't worry.",
+                "The car is broken.",
+                "Please get out and walk."
+            ],
+            ans: 0
+        },
+        {
+            q: "乘客問 'What is that smell?' (臭豆腐)，你怎麼回？",
+            options: [
+                "It's trash.",
+                "It's Stinky Tofu. It tastes good!",
+                "I don't know.",
+                "My car is dirty."
+            ],
+            ans: 1
+        },
+        {
+            q: "你想提醒後座乘客開門小心機車：",
+            options: [
+                "Open the door now.",
+                "Bye bye.",
+                "Watch out for scooters when opening the door.",
+                "Don't touch the door."
+            ],
+            ans: 2
+        }
+    ];
+
+    // ================= LOGIC =================
+
+    // 1. Init
+    window.onload = function() {
+        renderMessages();
+        renderScenarios();
+        loadQuiz();
+    };
+
+    function switchTab(tabId, btn) {
+        // Hide all sections
+        document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
+        // Show target
+        document.getElementById(tabId).classList.add('active');
+        
+        // Update buttons
+        document.querySelectorAll('nav button').forEach(el => el.classList.remove('active'));
+        btn.classList.add('active');
+    }
+
+    // 2. Render Canned Messages
+    function renderMessages() {
+        const renderItem = (item) => `
+            <div style="padding: 10px 0; border-bottom:1px solid #eee; overflow:hidden;">
+                <button class="copy-btn" onclick="copyText('${item.text.replace(/'/g, "\\'")}')">複製</button>
+                <div class="msg-text">
+                    <div style="font-weight:500;">${item.text}</div>
+                    <div style="font-size:0.8rem; color:#888;">${item.note}</div>
+                </div>
+            </div>
+        `;
+
+        document.getElementById('list-system').innerHTML = cannedMessages.filter(m => m.type === 'system').map(renderItem).join('');
+        document.getElementById('list-rules').innerHTML = cannedMessages.filter(m => m.type === 'rules').map(renderItem).join('');
+        document.getElementById('list-status').innerHTML = cannedMessages.filter(m => m.type === 'status').map(renderItem).join('');
+    }
+
+    function copyText(text) {
+        navigator.clipboard.writeText(text).then(() => {
+            const toast = document.getElementById('toast');
+            toast.style.opacity = 1;
+            setTimeout(() => toast.style.opacity = 0, 2000);
+        });
+    }
+
+    // 3. Render Scenarios & Clickable Words
+    function renderScenarios() {
+        const container = document.getElementById('scenarios-container');
+        let html = '';
+
+        scenarios.forEach(s => {
+            html += `
+                <div class="card">
+                    <div class="card-title">
+                        <span class="category-tag ${s.color}">${s.tag}</span>
+                        ${s.title}
+                    </div>
+                    <div class="dialogue-box">
+            `;
+            
+            s.dialogue.forEach(d => {
+                // Tokenize sentence into clickable spans
+                const words = d.text.split(' ').map(w => {
+                    const cleanWord = w.replace(/[^a-zA-Z]/g, ""); // remove punctuation for lookup
+                    return `<span class="clickable-word" onclick="openWord('${cleanWord}', '${d.text.replace(/'/g, "\\'")}')">${w}</span>`;
+                }).join(' ');
+
+                html += `
+                    <div style="margin-bottom:12px;">
+                        <div class="speaker">${d.speaker}</div>
+                        <div class="sentence">🔊 ${words}</div> 
+                        <button style="font-size:0.7rem; border:none; background:none; color:#276EF1; padding:0;" onclick="speakSentence('${d.text.replace(/'/g, "\\'")}')">▶ 整句發音</button>
+                    </div>
+                `;
+            });
+
+            html += `
+                    </div>
+                </div>
+            `;
+        });
+
+        container.innerHTML = html;
+    }
+
+    // 4. Word Modal & Audio
+    let currentWord = "";
+
+    function openWord(word, fullSentence) {
+        const cleanWord = word.toLowerCase();
+        currentWord = cleanWord;
+        
+        const modal = document.getElementById('wordModal');
+        const data = dictionary[cleanWord] || dictionary[cleanWord.slice(0,-1)]; // try singular
+
+        document.getElementById('m-word').innerText = word;
+
+        if (data) {
+            document.getElementById('m-pos').innerText = data.pos;
+            document.getElementById('m-def').innerText = data.def;
+            document.getElementById('m-ex').innerText = data.ex;
+        } else {
+            // Fallback for basic words
+            document.getElementById('m-pos').innerText = "單字";
+            document.getElementById('m-def').innerText = "點擊播放發音";
+            document.getElementById('m-ex').innerText = fullSentence;
+        }
+
+        modal.style.display = 'flex';
+    }
+
+    function closeModal() {
+        document.getElementById('wordModal').style.display = 'none';
+    }
+
+    // TTS Logic
+    function playWordAudio() {
+        const u = new SpeechSynthesisUtterance(document.getElementById('m-word').innerText);
+        u.lang = 'en-US';
+        u.rate = 0.9; // Slightly slower
+        speechSynthesis.speak(u);
+    }
+
+    function speakSentence(text) {
+        // Cancel previous speech
+        speechSynthesis.cancel();
+        const u = new SpeechSynthesisUtterance(text);
+        u.lang = 'en-US'; // Default browser voice
+        u.rate = 0.9;
+        
+        // Try to find a better voice
+        const voices = speechSynthesis.getVoices();
+        const preferred = voices.find(v => v.name.includes('Google US English') || v.name.includes('Samantha'));
+        if (preferred) u.voice = preferred;
+
+        speechSynthesis.speak(u);
+    }
+
+    // 5. Quiz Logic
+    function loadQuiz() {
+        const qContainer = document.getElementById('quiz-container');
+        const q = quizzes[Math.floor(Math.random() * quizzes.length)];
+        
+        let html = `<div style="font-weight:bold; margin-bottom:10px;">❓ ${q.q}</div>`;
+        q.options.forEach((opt, index) => {
+            html += `<button class="quiz-option" onclick="checkAnswer(this, ${index}, ${q.ans})">${opt}</button>`;
+        });
+        
+        qContainer.innerHTML = html;
+    }
+
+    function checkAnswer(btn, index, ans) {
+        const parent = btn.parentElement;
+        const buttons = parent.getElementsByClassName('quiz-option');
+        
+        if (index === ans) {
+            btn.classList.add('correct');
+            // Play ding sound (simulated by TTS for now)
+        } else {
+            btn.classList.add('wrong');
+            buttons[ans].classList.add('correct');
+        }
+        
+        // Disable all
+        for(let b of buttons) b.disabled = true;
+    }
+
+    // Load voices immediately for Chrome
+    window.speechSynthesis.getVoices();
+</script>
+
+</body>
+</html>
